@@ -1,0 +1,14 @@
+{
+  "name": "projectmj-bot",
+  "version": "1.0.0",
+  "description": "Signup bot for project mj",
+  "main": "bot.js",
+  "author": "Mads Jon Nielsen <madsjon@gmail.com>",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "discord.js": "11.5.1",
+    "winston": "3.2.1"
+  }
+}
