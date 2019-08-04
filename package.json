@@ -5,10 +5,15 @@
   "main": "bot.js",
   "author": "Mads Jon Nielsen <madsjon@gmail.com>",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
   },
   "dependencies": {
+    "array.prototype.find": "2.1.0",
+    "capitalize": "^2.0.0",
     "discord.js": "11.5.1",
+    "nodemon": "^1.19.1",
+    "timeago.js": "^4.0.0-beta.2",
     "winston": "3.2.1"
   }
 }
