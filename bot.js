@@ -33,21 +33,21 @@ const ago = (s) => timeago.format(s, 'my-locale');
 
 const customEmojis = {
     primaries: [
-        {name: 'warrior', short: 'warr', emoji: '<:warrior:606738496551387137>'},
-        {name: 'rogue', short: 'rog', emoji: '<:rogue:606741861322719232>'},
-        {name: 'warlock', short: 'lock', emoji: '<:warlock:606741861356535829>'},
-        {name: 'mage', short: 'mag', emoji: '<:mage:606741861234901023>'},
-        {name: 'hunter', short: 'hun', emoji: '<:hunter:606741861360467978>'},
-        {name: 'druid', short: 'dru', emoji: '<:druid:606741861268324352>'},
-        {name: 'priest', short: 'pri', emoji: '<:priest:606741861322981386>'},
-        {name: 'shaman', short: 'sha', emoji: '<:shaman:606741861826166794>'},
-        {name: 'cantcome', short: 'cant', emoji: '⛔'}
+        {name: 'warrior', short: 'warr', emoji: '<:warrior:608719517098442763>'},
+        {name: 'rogue', short: 'rog', emoji: '<:rogue:608719517400432647>'},
+        {name: 'warlock', short: 'lock', emoji: '<:warlock:608719517379461130>'},
+        {name: 'mage', short: 'mag', emoji: '<:mage:608719517480386560>'},
+        {name: 'hunter', short: 'hun', emoji: '<:hunter:608719517484449810>'},
+        {name: 'druid', short: 'dru', emoji: '<:druid:608719517383917568>'},
+        {name: 'priest', short: 'pri', emoji: '<:priest:608719516968419341>'},
+        {name: 'shaman', short: 'sha', emoji: '<:shaman:608719517023076370>'},
+        {name: 'cantcome', short: 'cant', emoji: '<:cant:608719517337780244>'}
     ],
     additionals: [
-        {name: 'tank', short: 'T', emoji: '<:tank:606748288045154313>'},
-        {name: 'quarter', short: 'L15', emoji: '🌙'},
-        {name: 'half', short: 'L30', emoji: '🌓'},
-        {name: 'full', short: 'L60', emoji: '🌕'},
+        {name: 'tank', short: 'T', emoji: '<:tank:608719517392044044>'},
+        {name: 'little_late', short: 'LL', emoji: '<:little_late:608723791425568787>'},
+        {name: 'very_late', short: 'VL', emoji: '<:very_late:608723791463448586>'},
+        {name: 'info', short: 'I', emoji: '<:info:608724535591698442>'}
     ],
     isValidEmoji: function(emoji) {
        return this.lists().find(d => d.emoji === emoji) != null;
@@ -59,18 +59,17 @@ const customEmojis = {
         const custom = this.lists().find(d => d.emoji === emoji);
         return custom ? custom.short : null;
     },
-    getShortByName: function(name) {
-        const custom = this.lists().find(d => d.name === name).short || null;
-        return custom ? custom.short : null;
+    getEmojiByName: function(name) {
+        const custom = this.lists().find(d => d.name === name);
+        return custom ? custom.emoji : null;
     },
-    getNameByEmoji: function(emoji) {
-        const custom = this.lists().find(d => d.emoji === emoji);
+    getPrimaryNameByEmoji(emoji) {
+        const custom = this.primaries.find(d => d.emoji === emoji);
         return custom ? custom.name : null;
     },
     lists: function() {
         return this.primaries.concat(this.additionals);
-    },
-    getNamesList: function() { return this.lists().map(d => d.name) },
+    }
 };
 
 const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}).*\[(Raid)\]/;
@@ -193,11 +192,11 @@ async function sendRaidInfo(message, user) {
         const data = JSON.parse(line);
         const name = data.name;
         if (data.type === 'add') {
-            const clazz = customEmojis.getNameByEmoji(data.emoji);
+            const clazz = customEmojis.getPrimaryNameByEmoji(data.emoji);
             if (clazz) {
                 data.class = clazz;
                 rdyLogs.set(name, data);
-            } else if (data.emoji === '⛔') {
+            } else if (data.emoji === customEmojis.getEmojiByName('cantcome')) {
                 cantLogs.set(name, data);
             }
         } else if (data.type === 'del') {
@@ -212,10 +211,10 @@ async function sendRaidInfo(message, user) {
 
         for (let [key, user] of users) {
             const name = memberName(user.id);
-            const clazz = customEmojis.getNameByEmoji(emoji);
+            const clazz = customEmojis.getPrimaryNameByEmoji(emoji);
             if (clazz !== null) {
                 rdy.set(name, {name: name, class: clazz});
-            } else if (emoji === '⛔') {
+            } else if (emoji === customEmojis.getEmojiByName('cantcome')) {
                 cant.add(name);
             } else {
                 additions.push({name: name, reaction: reaction});
@@ -300,7 +299,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
         return;
     }
 
-    if (['ℹ'].includes(emoji)) {
+    if ([customEmojis.getEmojiByName('info')].includes(emoji)) {
         await reaction.remove(user);
         await sendRaidInfo(reaction.message, user);
     } else {
@@ -320,7 +319,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
         return;
     }
 
-    if (['ℹ'].includes(emoji)) {
+    if ([customEmojis.getEmojiByName('info')].includes(emoji)) {
         return null;
     } else {
         const filename = getRaidLogFilename(reaction.message);
