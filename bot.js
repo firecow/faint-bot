@@ -3,13 +3,10 @@ const capitalize = require('capitalize');
 const timeago = require('timeago.js');
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const token = JSON.parse(fs.readFileSync('token.json', 'utf8')).token;
-require('array.prototype.find').shim();
+const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const customEmojis = require("./customemojis");
 
 const localeFunc = (number, index, total_sec) => {
-    // number: the timeago / timein number;
-    // index: the index of array below;
-    // total_sec: total seconds between date to be formatted and today's date;
     return [
         ['now', 'right now'],
         ['%ss', 'in %s seconds'],
@@ -31,59 +28,12 @@ const localeFunc = (number, index, total_sec) => {
 timeago.register('my-locale', localeFunc);
 const ago = (s) => timeago.format(s, 'my-locale');
 
-const customEmojis = {
-    primaries: [
-        {name: 'warrior', short: 'warr', emoji: '<:warrior:608719517098442763>'},
-        {name: 'rogue', short: 'rog', emoji: '<:rogue:608719517400432647>'},
-        {name: 'warlock', short: 'lock', emoji: '<:warlock:608719517379461130>'},
-        {name: 'mage', short: 'mag', emoji: '<:mage:608719517480386560>'},
-        {name: 'hunter', short: 'hun', emoji: '<:hunter:608719517484449810>'},
-        {name: 'druid', short: 'dru', emoji: '<:druid:608719517383917568>'},
-        {name: 'priest', short: 'pri', emoji: '<:priest:608719516968419341>'},
-        {name: 'shaman', short: 'sha', emoji: '<:shaman:608719517023076370>'},
-        {name: 'cantcome', short: 'cant', emoji: '<:cant:608719517337780244>'}
-    ],
-    additionals: [
-        {name: 'tank', short: 'T', emoji: '<:tank:608719517392044044>'},
-        {name: 'little_late', short: 'LL', emoji: '<:little_late:608723791425568787>'},
-        {name: 'very_late', short: 'VL', emoji: '<:very_late:608723791463448586>'},
-        {name: 'info', short: 'I', emoji: '<:info:608724535591698442>'}
-    ],
-    isValidEmoji: function(emoji) {
-       return this.lists().find(d => d.emoji === emoji) != null;
-    },
-    isPrimaryEmoji: function (emoji) {
-        return this.primaries.find(d => d.emoji === emoji) != null;
-    },
-    getShortByEmoji: function(emoji) {
-        const custom = this.lists().find(d => d.emoji === emoji);
-        return custom ? custom.short : null;
-    },
-    getEmojiByName: function(name) {
-        const custom = this.lists().find(d => d.name === name);
-        return custom ? custom.emoji : null;
-    },
-    getPrimaryNameByEmoji(emoji) {
-        const custom = this.primaries.find(d => d.emoji === emoji);
-        return custom ? custom.name : null;
-    },
-    lists: function() {
-        return this.primaries.concat(this.additionals);
-    }
-};
+
 
 const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}).*\[(Raid)\]/;
 
-function getRaidLogFilename(message) {
-    const match = signupRegex.exec(message.content);
-    if (!match || match[4].toLowerCase() !== 'raid') {
-        throw new Error(`getRaidLogFilename received non raid message\n${message.content}`)
-    }
-    const day = match[1].toLowerCase();
-    const month = match[2].toLowerCase();
-    const year = match[3].toLowerCase();
-    const type = match[4].toLowerCase();
-    return `${year}_${month}_${day}_${type}.jsonl`;
+function getMessageFilename(message) {
+    return `${message.id}.jsonl`;
 }
 
 function memberName(userId) {
@@ -108,12 +58,13 @@ function isRaidMessage(message) {
 }
 
 async function cron() {
-    let messages;
-    let channel = client.channels.find(channel => channel.name.indexOf('signup-bot-test') > -1);
-    messages = await channel.fetchMessages({limit: 20});
+    let messages = [];
 
-    channel = client.channels.find(channel => channel.name.indexOf('raid-signup') > -1);
-    messages = messages.concat(await channel.fetchMessages({limit: 20}));
+    for (const channelName of config.channels) {
+        let channel = client.channels.find(channel => channel.name === channelName);
+        const fetchedMessage = await channel.fetchMessages({limit: 50});
+        fetchedMessage.forEach(m => messages.push(m));
+    }
 
     await removeInvalidEmojisFromMessages(messages);
 }
@@ -171,8 +122,9 @@ async function removeInvalidRaidEmojis(raidMessage) {
 }
 
 async function sendRaidInfo(message, user) {
-    const filename = getRaidLogFilename(message);
-    const logs = fs.readFileSync(`logs/${filename}`, 'utf8');
+    const filename = `logs/${getMessageFilename(message)}`;
+
+    const logs = fs.existsSync(filename) ? fs.readFileSync(filename, 'utf8') : "";
     let content = `${message.content.split('\n')[0]}\n`;
 
     const classes = ['warrior', 'rogue', 'warlock', 'mage', 'hunter', 'druid', 'priest', 'shaman'];
@@ -184,25 +136,27 @@ async function sendRaidInfo(message, user) {
     const cant = new Set();
     const additions = [];
 
-    // Travers logs and find latest.
-    logs.split('\n').forEach((line) => {
-        if (line === '') {
-            return;
-        }
-        const data = JSON.parse(line);
-        const name = data.name;
-        if (data.type === 'add') {
-            const clazz = customEmojis.getPrimaryNameByEmoji(data.emoji);
-            if (clazz) {
-                data.class = clazz;
-                rdyLogs.set(name, data);
-            } else if (data.emoji === customEmojis.getEmojiByName('cantcome')) {
-                cantLogs.set(name, data);
+    if (logs !== "") {
+        // Travers logs and find latest.
+        logs.split('\n').forEach((line) => {
+            if (line === '') {
+                return;
             }
-        } else if (data.type === 'del') {
-            lastDel.set(name, data);
-        }
-    });
+            const data = JSON.parse(line);
+            const name = data.name;
+            if (data.type === 'add') {
+                const clazz = customEmojis.getPrimaryNameByEmoji(data.emoji);
+                if (clazz) {
+                    data.class = clazz;
+                    rdyLogs.set(name, data);
+                } else if (data.emoji === customEmojis.getEmojiByName('cantcome')) {
+                    cantLogs.set(name, data);
+                }
+            } else if (data.type === 'del') {
+                lastDel.set(name, data);
+            }
+        });
+    }
 
     // Traverse reactions
     for (const [key, reaction] of message.reactions) {
@@ -236,7 +190,7 @@ async function sendRaidInfo(message, user) {
         let signups = Array.from(rdy.values()).filter((d) => d.class === clazz);
         signups = signups.map((s) => {
             const log = rdyLogs.get(s.name);
-            s.time = log.time || null;
+            s.time = log ? log.time : null;
             return s;
         });
         signups.sort((a, b) => a.time - b.time);
@@ -282,7 +236,7 @@ async function sendRaidInfo(message, user) {
 }
 
 function addToLog(filename, data) {
-    fs.appendFileSync(`logs/${filename}`, `${JSON.stringify(data)}\n`)
+    fs.appendFileSync(`logs/${filename}`, `${JSON.stringify(data)}\n`);
 }
 // Update messages every 10 sec and on login.
 setInterval(cron, 10000);
@@ -303,10 +257,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
         await reaction.remove(user);
         await sendRaidInfo(reaction.message, user);
     } else {
-        const filename = getRaidLogFilename(reaction.message);
-        if (!filename) {
-            return;
-        }
+        const filename = getMessageFilename(reaction.message);
         addToLog(filename, {name: name, emoji: emoji, type: 'add', time: Date.now()});
     }
     await removeInvalidEmojisFromMessages([reaction.message]);
@@ -322,14 +273,11 @@ client.on('messageReactionRemove', async (reaction, user) => {
     if ([customEmojis.getEmojiByName('info')].includes(emoji)) {
         return null;
     } else {
-        const filename = getRaidLogFilename(reaction.message);
-        if (!filename) {
-            return;
-        }
+        const filename = getMessageFilename(reaction.message);
         addToLog(filename, {name: name, emoji: emoji, type: 'del', time: Date.now()});
     }
     await removeInvalidEmojisFromMessages([reaction.message]);
 });
 
 process.on('unhandledRejection', up => { throw up });
-return client.login(token);
+return client.login(config.token);
