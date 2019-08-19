@@ -37,10 +37,10 @@ function getMessageFilename(message) {
     return `${message.id}.jsonl`;
 }
 
-function memberName(userId) {
+function memberName(user) {
     const guild = client.guilds.find(g => g.id === "605864258819063839" );
-    const member = guild.members.find(m => m.user.id === userId);
-    return member.nickname || member.user.username;
+    const member = guild.members.find(m => m.user.id === user.id);
+    return member ? member.nickname || member.user.username : `${user.username} (Not in guild)`;
 }
 
 function filterMessages(messages, type) {
@@ -74,10 +74,10 @@ async function cron() {
     guild.members.forEach(d => {
         const roles = d.roles.sort((a, b) => a.position - b.position).filter(d => d.name.indexOf("@everyone") === -1 );
         if (roles.find(d => d.name === "Guild" && roles.find(d => d.name === "Friend"))) {
-            console.log(`Weird roles ${memberName(d.user.id)}, ${roles.map(d => d.name)}`);
+            console.log(`Weird roles ${memberName(d.user)}, ${roles.map(d => d.name)}`);
         }
         if (roles.array().length === 0) {
-            console.log('No roles', memberName(d.user.id), roles.map(d => d.name));
+            console.log('No roles', memberName(d.user), roles.map(d => d.name));
         }
     });
 }
@@ -103,7 +103,7 @@ async function removeInvalidRaidEmojis(raidMessage) {
                 dm.send(`You are high, I have removed ${reaction.emoji}`);
             }
 
-            const name = memberName(user.id);
+            const name = memberName(user);
             userReactions.set(name, userReactions.get(name) || { primary: [], user: user});
             if (customEmojis.isPrimaryEmoji(`${reaction.emoji}`)) {
                 userReactions.get(name).primary.push(reaction);
@@ -177,7 +177,7 @@ async function sendRaidInfo(message, user) {
         const emoji = `${reaction.emoji}`;
 
         for (let [key, user] of users) {
-            const name = memberName(user.id);
+            const name = memberName(user);
             const clazz = customEmojis.getPrimaryNameByEmoji(emoji);
             if (clazz !== null) {
                 rdy.set(name, {name: name, class: clazz});
@@ -194,7 +194,7 @@ async function sendRaidInfo(message, user) {
     const memberNames = [];
     guild.members.forEach(d => {
         if (d.roles.map(d => d.name).includes("Guild")) {
-            memberNames.push(memberName(d.user.id));
+            memberNames.push(memberName(d.user));
         }
     });
 
@@ -260,7 +260,7 @@ client.on('ready', async () => {
 });
 client.on('messageReactionAdd', async (reaction, user) => {
     const emoji = `${reaction.emoji}`;
-    const name = memberName(user.id);
+    const name = memberName(user);
 
     if (!isRaidMessage(reaction.message)) {
         return;
@@ -277,7 +277,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 });
 client.on('messageReactionRemove', async (reaction, user) => {
     const emoji = `${reaction.emoji}`;
-    const name = memberName(user.id);
+    const name = memberName(user);
 
     if (!isRaidMessage(reaction.message)) {
         return;
@@ -296,7 +296,7 @@ client.on('message', async (message) => {
     if (message.author.bot) {
         return;
     }
-    console.log(message.content);
+    //console.log(message.content);
     // await message.reply(${message.content}' makes no sense, and I even have a brain the size of a planet.`);
 });
 
