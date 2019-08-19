@@ -1,5 +1,6 @@
 const fs = require('fs');
 const capitalize = require('capitalize');
+const chance = require('chance')();
 const timeago = require('timeago.js');
 const Discord = require('discord.js');
 const client = new Discord.Client();
@@ -67,6 +68,18 @@ async function cron() {
     }
 
     await removeInvalidEmojisFromMessages(messages);
+
+    // Checkup on roles
+    const guild = client.guilds.find(g => g.id === "605864258819063839" );
+    guild.members.forEach(d => {
+        const roles = d.roles.sort((a, b) => a.position - b.position).filter(d => d.name.indexOf("@everyone") === -1 );
+        if (roles.find(d => d.name === "Guild" && roles.find(d => d.name === "Friend"))) {
+            console.log(`Weird roles ${memberName(d.user.id)}, ${roles.map(d => d.name)}`);
+        }
+        if (roles.array().length === 0) {
+            console.log('No roles', memberName(d.user.id), roles.map(d => d.name));
+        }
+    });
 }
 
 async function removeInvalidEmojisFromMessages(messages) {
@@ -278,6 +291,22 @@ client.on('messageReactionRemove', async (reaction, user) => {
     }
     await removeInvalidEmojisFromMessages([reaction.message]);
 });
+
+client.on('message', async (message) => {
+    if (message.author.bot) {
+        return;
+    }
+    console.log(message.content);
+    // await message.reply(${message.content}' makes no sense, and I even have a brain the size of a planet.`);
+});
+
+function getQuote() {
+    const quotes = [
+        '“Marvin is humming ironically because he hates humans so much.”',
+        '“Why should I want to make anything up? Life\'s bad enough as it is without wanting to invent any more of it.”'
+    ];
+    return chance.pickone(quotes);
+}
 
 process.on('unhandledRejection', up => { throw up });
 return client.login(config.token);

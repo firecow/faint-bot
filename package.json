@@ -10,9 +10,13 @@
   },
   "dependencies": {
     "capitalize": "^2.0.0",
+    "chance": "^1.0.18",
     "discord.js": "11.5.1",
     "nodemon": "^1.19.1",
     "timeago.js": "^4.0.0-beta.2",
     "winston": "3.2.1"
+  },
+  "devDependencies": {
+    "@types/chance": "^1.0.5"
   }
 }
