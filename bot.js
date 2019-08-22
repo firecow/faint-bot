@@ -33,12 +33,16 @@ const ago = (s) => timeago.format(s, 'my-locale');
 
 const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}).*\[(Raid)\]/;
 
+function getGuild() {
+    return client.guilds.find(g => g.id === "605864258819063839" );
+}
+
 function getMessageFilename(message) {
     return `${message.id}.jsonl`;
 }
 
 function memberName(user) {
-    const guild = client.guilds.find(g => g.id === "605864258819063839" );
+    const guild = getGuild();
     const member = guild.members.find(m => m.user.id === user.id);
     return member ? member.nickname || member.user.username : `${user.username} (Not in guild)`;
 }
@@ -70,7 +74,7 @@ async function cron() {
     await removeInvalidEmojisFromMessages(messages);
 
     // Checkup on roles
-    const guild = client.guilds.find(g => g.id === "605864258819063839" );
+    const guild = getGuild();
     guild.members.forEach(d => {
         const roles = d.roles.sort((a, b) => a.position - b.position).filter(d => d.name.indexOf("@everyone") === -1 );
         if (roles.find(d => d.name === "Guild" && roles.find(d => d.name === "Friend"))) {
@@ -134,6 +138,32 @@ async function removeInvalidRaidEmojis(raidMessage) {
     }
 }
 
+async function sendGuildInfo(user) {
+    const classes = [
+        "Rogue", "Warrior", "Priest", "Priest",
+        "Warlock", "Mage", "Druid", "Shaman", "Hunter"
+    ];
+    const rolesToInclude = ["Guild", "Class Leader", "Officer"];
+    const guild = getGuild();
+    const guildies = [];
+    guild.members.forEach((m) => {
+       if (m.roles.filter(r => rolesToInclude.includes(r.name)).array().length > 0) {
+           guildies.push(m);
+       }
+    });
+    const dm = await user.createDM();
+    let txt = `**Guild Details**\n`;
+
+    txt += `Guildies: **${guildies.length}**\n\n`;
+
+    classes.forEach((clazz) => {
+        const length = guildies.filter(m => m.roles.filter(r => r.name === clazz).array().length).length;
+        txt += `${clazz} **${length}**\n`;
+    });
+
+    dm.send(txt);
+}
+
 async function sendRaidInfo(message, user) {
     const filename = `logs/${getMessageFilename(message)}`;
 
@@ -190,7 +220,7 @@ async function sendRaidInfo(message, user) {
     }
 
     // Compare cants rdys with all guild members
-    const guild = client.guilds.find(g => g.id === "605864258819063839" );
+    const guild = getGuild();
     const memberNames = [];
     guild.members.forEach(d => {
         if (d.roles.map(d => d.name).includes("Guild")) {
@@ -296,8 +326,22 @@ client.on('message', async (message) => {
     if (message.author.bot) {
         return;
     }
-    //console.log(message.content);
-    // await message.reply(${message.content}' makes no sense, and I even have a brain the size of a planet.`);
+
+    const content = message.content;
+    if (message.channel.type === 'dm') {
+        switch (content) {
+            case '!guilddetails':
+                await sendGuildInfo(message.author);
+                break;
+
+            default:
+                let reply = `'${message.content}' makes no sense, and I have a brain the size of a planet.\n\n`;
+                reply += `**Commands**\n`;
+                reply += `\`!guilddetails\``;
+                await message.reply(reply);
+                break;
+        }
+    }
 });
 
 function getQuote() {
