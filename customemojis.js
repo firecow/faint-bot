@@ -1,5 +1,8 @@
 module.exports = {
     primaries: [
+        {name: 'cantcome', short: 'cant', emoji: '<:cant:608719517337780244>'}
+    ],
+    clazz: [
         {name: 'warrior', short: 'warr', emoji: '<:warrior:608719517098442763>'},
         {name: 'rogue', short: 'rog', emoji: '<:rogue:608719517400432647>'},
         {name: 'warlock', short: 'lock', emoji: '<:warlock:608719517379461130>'},
@@ -8,7 +11,6 @@ module.exports = {
         {name: 'druid', short: 'dru', emoji: '<:druid:608719517383917568>'},
         {name: 'priest', short: 'pri', emoji: '<:priest:608719516968419341>'},
         {name: 'shaman', short: 'sha', emoji: '<:shaman:608719517023076370>'},
-        {name: 'cantcome', short: 'cant', emoji: '<:cant:608719517337780244>'}
     ],
     additionals: [
         {name: 'tank', short: 'T', emoji: '<:tank:608719517392044044>'},
@@ -19,22 +21,25 @@ module.exports = {
     isValidEmoji: function(emoji) {
         return this.lists().find(d => d.emoji === emoji) != null;
     },
+    isClassEmoji: function (emoji) {
+        return this.clazz.find(d => d.emoji === emoji) != null;
+    },
     isPrimaryEmoji: function (emoji) {
-        return this.primaries.find(d => d.emoji === emoji) != null;
+        return this.primaries.concat(this.clazz).find(d => d.emoji === emoji) != null;
     },
     getShortByEmoji: function(emoji) {
         const custom = this.lists().find(d => d.emoji === emoji);
         return custom ? custom.short : null;
     },
+    getNameByEmoji: function(emoji) {
+        const custom = this.lists().find(d => d.emoji === emoji);
+        return custom ? custom.name : null;
+    },
     getEmojiByName: function(name) {
         const custom = this.lists().find(d => d.name === name);
         return custom ? custom.emoji : null;
     },
-    getPrimaryNameByEmoji(emoji) {
-        const custom = this.primaries.find(d => d.emoji === emoji);
-        return custom ? custom.name : null;
-    },
     lists: function() {
-        return this.primaries.concat(this.additionals);
+        return this.primaries.concat(this.additionals).concat(this.clazz);
     }
 };

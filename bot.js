@@ -195,9 +195,8 @@ async function sendRaidInfo(message, user) {
             const data = JSON.parse(line);
             const name = data.name;
             if (data.type === 'add') {
-                const clazz = customEmojis.getPrimaryNameByEmoji(data.emoji);
-                if (clazz) {
-                    data.class = clazz;
+                if (customEmojis.isClassEmoji(data.emoji)) {
+                    data.class = customEmojis.getNameByEmoji(data.emoji);
                     rdyLogs.set(name, data);
                 } else if (data.emoji === customEmojis.getEmojiByName('cantcome')) {
                     cantLogs.set(name, data);
@@ -215,10 +214,10 @@ async function sendRaidInfo(message, user) {
 
         for (let [key, user] of users) {
             const name = memberName(user);
-            const clazz = customEmojis.getPrimaryNameByEmoji(emoji);
-            if (clazz !== null) {
-                rdy.set(name, {name: name, class: clazz});
-            } else if (emoji === customEmojis.getEmojiByName('cantcome')) {
+
+            if (customEmojis.isClassEmoji(emoji)) {
+                rdy.set(name, {name: name, class: customEmojis.getNameByEmoji(emoji)});
+            } else if (`${emoji}` === customEmojis.getEmojiByName('cantcome')) {
                 cant.add(name);
             } else {
                 additions.push({name: name, reaction: reaction});
