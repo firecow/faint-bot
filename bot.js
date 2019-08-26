@@ -140,21 +140,28 @@ async function removeInvalidRaidEmojis(raidMessage) {
 
 async function sendGuildInfo(user) {
     const classes = [
-        "Rogue", "Warrior", "Priest", "Priest",
+        "Rogue", "Warrior", "Priest",
         "Warlock", "Mage", "Druid", "Shaman", "Hunter"
     ];
-    const rolesToInclude = ["Guild", "Class Leader", "Officer"];
+    const guildieRoles = ["Guild", "Class Leader", "Officer"];
+    const socialRoles  = ["Friend"];
     const guild = getGuild();
     const guildies = [];
+    const socials = [];
     guild.members.forEach((m) => {
-       if (m.roles.filter(r => rolesToInclude.includes(r.name)).array().length > 0) {
+       if (m.roles.filter(r => guildieRoles.includes(r.name)).array().length > 0) {
            guildies.push(m);
        }
+    });
+    guild.members.forEach((m) => {
+        if (m.roles.filter(r => socialRoles.includes(r.name)).array().length > 0) {
+            socials.push(m);
+        }
     });
     const dm = await user.createDM();
     let txt = `**Guild Details**\n`;
 
-    txt += `Guildies: **${guildies.length}**\n\n`;
+    txt += `Guildies: **${guildies.length}**, Socials: **${socials.length}**\n\n`;
 
     classes.forEach((clazz) => {
         const length = guildies.filter(m => m.roles.filter(r => r.name === clazz).array().length).length;
