@@ -66,7 +66,7 @@ async function cron() {
     let messages = [];
 
     for (const channelName of config.channels) {
-        let channel = client.channels.find(channel => channel.name === channelName);
+        let channel = client.channels.find(channel => channel.name.indexOf(channelName) > -1);
         const fetchedMessage = await channel.fetchMessages({limit: 50});
         fetchedMessage.forEach(m => messages.push(m));
     }
