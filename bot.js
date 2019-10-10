@@ -300,6 +300,7 @@ async function sendRaidInfo(message, user) {
     content += `\n**Late** (${Array.from(late.keys()).length})`;
     late.forEach((d) => {
         content += `\n${d.name} (${capitalize(d.class)})`;
+        if (d.time) content += ` [${ago(d.time, message)}]`;
     });
     content += `\n`;
 
