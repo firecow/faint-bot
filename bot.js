@@ -52,11 +52,7 @@ const getRaidStart = (message) => {
 
 const isLateSigned = (signupTime, raidMessage) => {
     let raidStart = getRaidStart(raidMessage);
-    if (signupTime === null) {
-        return true;
-    }
-
-    if (raidStart === null) {
+    if (signupTime === null || raidStart === null) {
         return false;
     }
     return Math.sign(raidStart - (signupTime + 8.64e+7)) === -1;
@@ -253,7 +249,7 @@ async function sendRaidInfo(message, user) {
                 const time = log ? log.time : null;
                 if (isLateSigned(time, message)) {
                     late.set(name, {name: name, class: emojiName, time: time});
-                } else if (customEmojis.getNameByEmoji(emoji) === 'tank') {
+                } else if (emojiName === 'tank') {
                     tanks.set(name, {name: name, class: emojiName, time: time});
                     rdy.delete(name);
                 } else if (!tanks.has(name)) {
