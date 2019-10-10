@@ -251,7 +251,7 @@ async function sendRaidInfo(message, user) {
             if (customEmojis.isClassEmoji(emoji) || emojiName === 'tank') {
                 const log = rdyLogs.get(name);
                 const time = log ? log.time : null;
-                if (isLateSigned(log.time, message)) {
+                if (isLateSigned(time, message)) {
                     late.set(name, {name: name, class: emojiName, time: time});
                 } else if (customEmojis.getNameByEmoji(emoji) === 'tank') {
                     tanks.set(name, {name: name, class: emojiName, time: time});
