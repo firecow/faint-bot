@@ -27,11 +27,22 @@ const localeFunc = (number, index, total_sec) => {
 };
 // register your locale with timeago
 timeago.register('my-locale', localeFunc);
-const ago = (s) => timeago.format(s, 'my-locale');
+const ago = (s, raidMessage) => {
+
+    // const match = signupRegex.exec(raidMessage);
+    // const day = match[1];
+    // const month = match[2];
+    // const year = match[3];
+    // const hour = match[4];
+    // const min = match[5];
+    // console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTime());
+
+    timeago.format(s, 'my-locale');
+};
 
 
 
-const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}).*\[(Raid)\]/;
+const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}) (\d{2}):(\d{2}).*\[(Raid)\]/;
 
 function getGuild() {
     return client.guilds.find(g => g.id === "605864258819063839" );
@@ -51,7 +62,15 @@ function filterMessages(messages, type) {
     const raidMessages = [];
     messages.forEach((message) => {
         const match = signupRegex.exec(message.content);
-        if (match && match[4].toLowerCase() === type) {
+        if (match && match[6].toLowerCase() === type) {
+
+            // const day = match[1];
+            // const month = match[2];
+            // const year = match[3];
+            // const hour = match[4];
+            // const min = match[5];
+            // console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTime());
+
             raidMessages.push(message);
         }
     });
@@ -173,7 +192,6 @@ async function sendGuildInfo(user) {
 
 async function sendRaidInfo(message, user) {
     const filename = `logs/${getMessageFilename(message)}`;
-
     const logs = fs.existsSync(filename) ? fs.readFileSync(filename, 'utf8') : "";
     let content = `${message.content.split('\n')[0]}\n`;
 
