@@ -43,7 +43,7 @@ const getRaidStart = (message) => {
 
         const inParis = new Date(`${day} ${month} ${year} ${hour}:${min}`).toLocaleString("en-US", {timeZone: "Europe/Paris"});
         const msgTime = new Date(inParis).getTime();
-        console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTimezoneOffset());
+        console.log(msgTime.getTimezoneOffset());
         if (!isNaN(msgTime)) {
             return msgTime;
         }
