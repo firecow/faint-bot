@@ -9,38 +9,58 @@ const customEmojis = require("./customemojis");
 
 const localeFunc = (number, index, total_sec) => {
     return [
-        ['now', 'right now'],
-        ['%ss', 'in %s seconds'],
-        ['1m', 'in 1 minute'],
-        ['%sm', 'in %s minutes'],
-        ['1h', 'in 1 hour'],
-        ['%sh', 'in %s hours'],
-        ['1d', 'in 1 day'],
-        ['%sd', 'in %s days'],
-        ['1w', 'in 1 week'],
-        ['%sw', 'in %s weeks'],
-        ['1m', 'in 1 month'],
-        ['%sm', 'in %s months'],
-        ['1y', 'in 1 year'],
-        ['%sy', 'in %s years']
+        ['now', 'now'],
+        ['%ss', '-%ss'],
+        ['1m', '-1m'],
+        ['%sm', '-%sm'],
+        ['1h', '-1h'],
+        ['%sh', '-%sh'],
+        ['1d', '-1d'],
+        ['%sd', '-%sd'],
+        ['1w', '-1w'],
+        ['%sw', '-%sw'],
+        ['1m', '-1m'],
+        ['%sm', '-%sm'],
+        ['1y', '-1y'],
+        ['%sy', '-%sy']
     ][index];
 };
 // register your locale with timeago
 timeago.register('my-locale', localeFunc);
 const ago = (s, raidMessage) => {
-
-    // const match = signupRegex.exec(raidMessage);
-    // const day = match[1];
-    // const month = match[2];
-    // const year = match[3];
-    // const hour = match[4];
-    // const min = match[5];
-    // console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTime());
-
-    timeago.format(s, 'my-locale');
+    let now = getRaidStart(raidMessage) || Date.now();
+    return timeago.format(s, 'my-locale', now);
 };
 
+const getRaidStart = (message) => {
+    const match = signupRegex.exec(message);
+    if (match) {
+        const day = match[1];
+        const month = match[2];
+        const year = match[3];
+        const hour = match[4];
+        const min = match[5];
 
+        const msgTime = new Date(`${day} ${month} ${year} ${hour}:${min}`).getTime();
+        console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTimezoneOffset());
+        if (!isNaN(msgTime)) {
+            return msgTime;
+        }
+    }
+    return null;
+};
+
+const isLateSigned = (signupTime, raidMessage) => {
+    let raidStart = getRaidStart(raidMessage);
+    if (signupTime === null) {
+        return true;
+    }
+
+    if (raidStart === null) {
+        return false;
+    }
+    return Math.sign(raidStart - (signupTime + 8.64e+7)) === -1;
+};
 
 const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}) (\d{2}):(\d{2}).*\[(Raid)\]/;
 
@@ -63,14 +83,6 @@ function filterMessages(messages, type) {
     messages.forEach((message) => {
         const match = signupRegex.exec(message.content);
         if (match && match[6].toLowerCase() === type) {
-
-            // const day = match[1];
-            // const month = match[2];
-            // const year = match[3];
-            // const hour = match[4];
-            // const min = match[5];
-            // console.log(new Date(`${day} ${month} ${year} ${hour}:${min}`).getTime());
-
             raidMessages.push(message);
         }
     });
@@ -201,6 +213,8 @@ async function sendRaidInfo(message, user) {
     const lastDel = new Map();
 
     const rdy = new Map();
+    const tanks = new Map();
+    const late = new Map();
     const cant = new Set();
     const additions = [];
 
@@ -233,8 +247,18 @@ async function sendRaidInfo(message, user) {
         for (let [key, user] of users) {
             const name = memberName(user);
 
-            if (customEmojis.isClassEmoji(emoji)) {
-                rdy.set(name, {name: name, class: customEmojis.getNameByEmoji(emoji)});
+            const emojiName = customEmojis.getNameByEmoji(emoji);
+            if (customEmojis.isClassEmoji(emoji) || emojiName === 'tank') {
+                const log = rdyLogs.get(name);
+                const time = log ? log.time : null;
+                if (isLateSigned(log.time, message)) {
+                    late.set(name, {name: name, class: emojiName, time: time});
+                } else if (customEmojis.getNameByEmoji(emoji) === 'tank') {
+                    tanks.set(name, {name: name, class: emojiName, time: time});
+                    rdy.delete(name);
+                } else if (!tanks.has(name)) {
+                    rdy.set(name, {name: name, class: emojiName, time: time});
+                }
             } else if (`${emoji}` === customEmojis.getEmojiByName('cantcome')) {
                 cant.add(name);
             } else {
@@ -252,37 +276,44 @@ async function sendRaidInfo(message, user) {
         }
     });
 
+    // Print tanks
+    content += `\n**${capitalize("Tank")}** (${Array.from(tanks.keys()).length})`;
+    tanks.forEach((d) => {
+        content += `\n${d.name}`;
+    });
+    content += `\n`;
+
     // Print classes
     classes.forEach((clazz) => {
         let signups = Array.from(rdy.values()).filter((d) => d.class === clazz);
-        signups = signups.map((s) => {
-            const log = rdyLogs.get(s.name);
-            s.time = log ? log.time : null;
-            return s;
-        });
         signups.sort((a, b) => a.time - b.time);
         content += `\n**${capitalize(clazz)}** (${signups.length})`;
         signups.forEach((s) => {
             const additionsShorts = additions.filter(d => s.name === d.name).map(d => customEmojis.getShortByEmoji(`${d.reaction.emoji}`));
-            const log = rdyLogs.get(s.name);
             content += `\n${s.name}`;
             if (additionsShorts.length > 0) content += ` (${additionsShorts.join( )})`;
-            if (log) content += ` [${ago(log.time)}]`;
         });
         content += `\n`;
     });
+
+    // Print late
+    content += `\n**Late** (${Array.from(late.keys()).length})`;
+    late.forEach((d) => {
+        content += `\n${d.name} (${capitalize(d.class)})`;
+    });
+    content += `\n`;
 
     // Print cants
     content += `\n**Can't** (${Array.from(cant.keys()).length})`;
     cant.forEach((name) => {
         content += `\n${name}`;
         const log = cantLogs.get(name);
-        if (log) content += ` [${ago(log.time)}]`;
+        if (log) content += ` [${ago(log.time, message)}]`;
     });
     content += `\n`;
 
     // Print didn't react
-    const reactors = Array.from(cant.keys()).concat(Array.from(rdy.keys()));
+    const reactors = Array.from(cant.keys()).concat(Array.from(rdy.keys())).concat(Array.from(late.keys()));
     let noReactors = memberNames.filter(x => !reactors.includes(x)).map((name) => {
         const log = lastDel.get(name);
         return {name: name, time: log ? log.time : null};
@@ -293,7 +324,7 @@ async function sendRaidInfo(message, user) {
     content += `\n**Didn't react** (${noReactors.length})\n`;
     noReactors.forEach((x) => {
         content += `${x.name}`;
-        if (x.time) content += ` [${ago(x.time)}]`;
+        if (x.time) content += ` [${ago(x.time, message)}]`;
         content += `, `;
     });
 
