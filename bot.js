@@ -309,7 +309,7 @@ async function sendRaidInfo(message, user) {
     content += `\n`;
 
     // Print didn't react
-    const reactors = Array.from(cant.keys()).concat(Array.from(rdy.keys())).concat(Array.from(late.keys()));
+    const reactors = Array.from(cant.keys()).concat(Array.from(rdy.keys())).concat(Array.from(late.keys())).concat(Array.from(tanks.keys()));
     let noReactors = memberNames.filter(x => !reactors.includes(x)).map((name) => {
         const log = lastDel.get(name);
         return {name: name, time: log ? log.time : null};
