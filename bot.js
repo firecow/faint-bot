@@ -57,7 +57,7 @@ const isLateSigned = (signupTime, raidMessage) => {
     return Math.sign(raidStart - (signupTime + 8.64e+7)) === -1;
 };
 
-const signupRegex = /(\d{1,2}) (January|Feburary|March|April|May|June|July|August|September|October|November|December) (\d{4}) (\d{2}):(\d{2}).*\[(Raid)\]/;
+const signupRegex = /(\d{1,2}) (January|February|March|April|May|June|July|August|September|October|November|December) (\d{4}) (\d{2}):(\d{2}).*\[(Raid)\]/;
 
 function getGuild() {
     return client.guilds.find(g => g.id === "605864258819063839" );
