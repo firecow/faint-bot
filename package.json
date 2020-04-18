@@ -11,7 +11,7 @@
   "dependencies": {
     "capitalize": "2.0.3",
     "chance": "1.1.4",
-    "discord.js": "12.2.0",
+    "discord.js": "11.5.1",
     "nodemon": "2.0.3",
     "timeago.js": "4.0.2",
     "winston": "3.2.1"
