@@ -18,7 +18,7 @@ module.exports = {
         {name: 'very_late', short: 'VL', emoji: '<:very_late:608723791463448586>'},
         {name: 'info', short: 'I', emoji: '<:info:608724535591698442>'}
     ],
-    isValidEmoji: function(emoji) {
+    isValidEmoji: function (emoji) {
         return this.lists().find(d => d.emoji === emoji) != null;
     },
     isClassEmoji: function (emoji) {
@@ -27,19 +27,19 @@ module.exports = {
     isPrimaryEmoji: function (emoji) {
         return this.primaries.concat(this.clazz).find(d => d.emoji === emoji) != null;
     },
-    getShortByEmoji: function(emoji) {
+    getShortByEmoji: function (emoji) {
         const custom = this.lists().find(d => d.emoji === emoji);
         return custom ? custom.short : null;
     },
-    getNameByEmoji: function(emoji) {
+    getNameByEmoji: function (emoji) {
         const custom = this.lists().find(d => d.emoji === emoji);
         return custom ? custom.name : null;
     },
-    getEmojiByName: function(name) {
+    getEmojiByName: function (name) {
         const custom = this.lists().find(d => d.name === name);
         return custom ? custom.emoji : null;
     },
-    lists: function() {
+    lists: function () {
         return this.primaries.concat(this.additionals).concat(this.clazz);
     }
 };

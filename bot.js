@@ -60,7 +60,7 @@ const isLateSigned = (signupTime, raidMessage) => {
 const signupRegex = /(\d{1,2}) (January|Jan|February|Feb|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec) (\d{4}) (\d{2}):(\d{2}).*\[(Raid)\]/;
 
 function getGuild() {
-    return client.guilds.find(g => g.id === "605864258819063839" );
+    return client.guilds.find(g => g.id === "605864258819063839");
 }
 
 function getMessageFilename(message) {
@@ -102,7 +102,7 @@ async function cron() {
     // Checkup on roles
     const guild = getGuild();
     guild.members.forEach(d => {
-        const roles = d.roles.sort((a, b) => a.position - b.position).filter(d => d.name.indexOf("@everyone") === -1 );
+        const roles = d.roles.sort((a, b) => a.position - b.position).filter(d => d.name.indexOf("@everyone") === -1);
         if (roles.find(d => d.name === "Guild" && roles.find(d => d.name === "Friend"))) {
             console.log(`Weird roles ${memberName(d.user)}, ${roles.map(d => d.name)}`);
         }
@@ -134,7 +134,7 @@ async function removeInvalidRaidEmojis(raidMessage) {
             }
 
             const name = memberName(user);
-            userReactions.set(name, userReactions.get(name) || { primary: [], user: user});
+            userReactions.set(name, userReactions.get(name) || {primary: [], user: user});
             if (customEmojis.isPrimaryEmoji(`${reaction.emoji}`)) {
                 userReactions.get(name).primary.push(reaction);
             }
@@ -170,14 +170,14 @@ async function sendGuildInfo(user) {
         "Warlock", "Mage", "Druid", "Shaman", "Hunter"
     ];
     const guildieRoles = ["Guild", "Class Leader", "Officer"];
-    const socialRoles  = ["Friend"];
+    const socialRoles = ["Social", "World Bosses", "Friend"];
     const guild = getGuild();
     const guildies = [];
     const socials = [];
     guild.members.forEach((m) => {
-       if (m.roles.filter(r => guildieRoles.includes(r.name)).array().length > 0) {
-           guildies.push(m);
-       }
+        if (m.roles.filter(r => guildieRoles.includes(r.name)).array().length > 0) {
+            guildies.push(m);
+        }
     });
     guild.members.forEach((m) => {
         if (m.roles.filter(r => socialRoles.includes(r.name)).array().length > 0) {
@@ -194,7 +194,7 @@ async function sendGuildInfo(user) {
         txt += `${clazz} **${length}**\n`;
     });
 
-    dm.send(txt);
+    await dm.send(txt);
 }
 
 async function sendRaidInfo(message, user) {
@@ -286,7 +286,7 @@ async function sendRaidInfo(message, user) {
         signups.forEach((s) => {
             const additionsShorts = additions.filter(d => s.name === d.name).map(d => customEmojis.getShortByEmoji(`${d.reaction.emoji}`));
             content += `\n${s.name}`;
-            if (additionsShorts.length > 0) content += ` (${additionsShorts.join( )})`;
+            if (additionsShorts.length > 0) content += ` (${additionsShorts.join()})`;
         });
         content += `\n`;
     });
@@ -326,12 +326,13 @@ async function sendRaidInfo(message, user) {
 
 
     const dm = await user.createDM();
-    dm.send(content);
+    await dm.send(content);
 }
 
 function addToLog(filename, data) {
     fs.appendFileSync(`logs/${filename}`, `${JSON.stringify(data)}\n`);
 }
+
 // Update messages every 10 sec and on login.
 setInterval(cron, 10000);
 
@@ -403,5 +404,7 @@ function getQuote() {
     return chance.pickone(quotes);
 }
 
-process.on('unhandledRejection', up => { throw up });
+process.on('unhandledRejection', up => {
+    throw up
+});
 return client.login(config.token);
