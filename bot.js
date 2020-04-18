@@ -130,7 +130,7 @@ async function removeInvalidRaidEmojis(raidMessage) {
             if (!customEmojis.isValidEmoji(`${reaction.emoji}`)) {
                 await reaction.remove(user);
                 const dm = await user.createDM();
-                dm.send(`You are high, I have removed ${reaction.emoji}`);
+                dm.send(`You are high, I have removed ${reaction.emoji}`).then();
             }
 
             const name = memberName(user);

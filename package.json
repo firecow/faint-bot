@@ -9,14 +9,14 @@
     "dev": "nodemon bot.js"
   },
   "dependencies": {
-    "capitalize": "2.0.1",
+    "capitalize": "2.0.3",
     "chance": "1.1.4",
-    "discord.js": "11.5.1",
-    "nodemon": "2.0.2",
+    "discord.js": "12.2.0",
+    "nodemon": "2.0.3",
     "timeago.js": "4.0.2",
     "winston": "3.2.1"
   },
   "devDependencies": {
-    "@types/chance": "1.0.8"
+    "@types/chance": "1.0.10"
   }
 }
