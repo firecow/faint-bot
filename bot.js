@@ -117,10 +117,24 @@ async function sendRaidInfo(message, user) {
 
 client.on('ready', async () => {
     const chans = await client.channels.cache.array().filter((c) => c['name'].indexOf("signup") > -1);
-    chans.forEach((c) => {
-        console.log(`Fetching 10 latest from ${c.name}`);
-        c.messages.fetch({limit: 10});
-    });
+    const guild = getGuild();
+
+    const promises = [];
+
+    for (const chan of chans) {
+        console.log(`Fetching 10 latest from ${chan.name}`);
+        const messages = await chan.messages.fetch({limit: 10});
+        for (const message of messages.array()) {
+            for (const reaction of message.reactions.cache.array()) {
+                const users = await reaction.users.fetch();
+                for (const user of users.array()) {
+                    promises.push(guild.members.fetch(user));
+                }
+            }
+        }
+    }
+
+    await Promise.all(promises);
 
 });
 client.on('messageReactionAdd', async (reaction, user) => {
