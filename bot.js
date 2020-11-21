@@ -35,6 +35,7 @@ function isRaidMessage(message) {
 async function sendRaidInfo(message, user) {
     let content = `${message.content.split('\n')[0]}\n\n`;
 
+    const guild = getGuild();
     const rdy = new Map();
     const cant = new Map();
 
@@ -44,6 +45,7 @@ async function sendRaidInfo(message, user) {
         const emoji = `${reaction.emoji}`;
 
         for (let user of users.values()) {
+            await guild.members.fetch(user);
             const name = memberName(user);
             if (`${emoji}` === customEmojis.getEmojiByName('cantcome')) {
                 cant.set(name, {name: name, emoji: emoji});
@@ -55,7 +57,6 @@ async function sendRaidInfo(message, user) {
     }
 
     // Get all guild member names
-    const guild = getGuild();
     const memberNames = [];
     guild.members.cache.array().forEach(d => {
         if (d.roles.cache.array().map(d => d.name).includes("Guild")) {
