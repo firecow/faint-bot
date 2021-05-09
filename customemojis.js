@@ -11,6 +11,7 @@ module.exports = {
         {name: 'druid', short: 'dru', emoji: '<:druid:608719517383917568>'},
         {name: 'priest', short: 'pri', emoji: '<:priest:608719516968419341>'},
         {name: 'shaman', short: 'sha', emoji: '<:shaman:608719517023076370>'},
+        {name: 'paladin', short: 'pala', emoji: '<:paladin:840148804920803408>'},
         {name: 'tank', short: 'T', emoji: '<:tank:608719517392044044>'},
     ],
     commands: [
